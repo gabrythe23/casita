@@ -1,0 +1,9 @@
+{
+  "type": "sqlite",
+  "database": "casita",
+  "entities": ["src/**/*.entity.ts"],
+  "migrations": ["src/migrations/*.ts"],
+  "cli": {
+    "migrationsDir": "src/migrations"
+  }
+}
