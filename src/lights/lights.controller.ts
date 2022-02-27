@@ -16,7 +16,7 @@ export class LightsController {
 
   @Cron(CronExpression.EVERY_SECOND)
   async checkNightShiftBathroom() {
-    this.logger.log('Set Lights color if needed');
+    this.logger.log('Checking lights...');
     await this.service.checkAllLights();
   }
 }

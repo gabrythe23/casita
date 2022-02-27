@@ -6,12 +6,7 @@ import { Repository } from 'typeorm';
 import axios from 'axios';
 import { v4 } from 'uuid';
 import { CasitaBulbs, MerossApiColor, SunriseSunsetDate } from './interfaces';
-
-const lightBedRoom = new Light(CasitaBulbs.BEDROOM);
-const lightBathRoom = new Light(CasitaBulbs.BATHROOM);
-const lightKitchen = new Light(CasitaBulbs.KITCHEN);
-const lightLivingRoom = new Light(CasitaBulbs.LIVING_ROOM);
-const lightStudio = new Light(CasitaBulbs.STUDIO);
+import { LightColors } from './light-colors';
 
 @Injectable()
 export class LightsService {
@@ -27,7 +22,7 @@ export class LightsService {
   }
 
   async checkAllLights(): Promise<void> {
-    const color = LightsService.getNightShiftColor(
+    const color = this.getNightShiftColor(
       await this.sunsetEntityRepository.findOneOrFail({
         order: { registeredDate: 'DESC' },
       }),
@@ -57,9 +52,10 @@ export class LightsService {
     this.logger.log(message);
   }
 
-  private static getNightShiftColor(
+  private getNightShiftColor(
     sunriseSunset: SunriseSunsetEntity,
   ): MerossApiColor {
+    let message = 'Color is ';
     const sunrise = LightsService.startEnd(sunriseSunset.sunrise);
     const sunset = LightsService.startEnd(sunriseSunset.sunset);
     const dayDate = new Date(sunriseSunset.sunset).getDate();
@@ -68,19 +64,23 @@ export class LightsService {
     let color: MerossApiColor;
 
     if (now > sunrise.end && now <= sunset.start) {
-      color = Light.WHITE;
+      message += 'WHITE';
+      color = LightColors.WHITE;
     } else if (
       (now > sunset.start && now <= sunset.end) ||
       (now > sunrise.start && now <= sunrise.end)
     ) {
-      color = Light.TANGERINE_100;
+      message += 'TANGERINE_100';
+      color = LightColors.TANGERINE_100;
     } else if (now > sunset.end && new Date(now).getDate() === dayDate) {
       // res.payload = global.get('COLOR_ORANGE');
-      color = Light.TANGERINE_50;
+      message += 'TANGERINE_50';
+      color = LightColors.TANGERINE_50;
     } else {
-      color = Light.RED;
+      message += 'RED';
+      color = LightColors.RED;
     }
-
+    this.logger.log(message);
     return color;
   }
 
