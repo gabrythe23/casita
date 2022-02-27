@@ -1,3 +1,11 @@
+export enum CasitaBulbsName {
+  BEDROOM = 'BEDROOM',
+  KITCHEN = 'KITCHEN',
+  BATHROOM = 'BATHROOM',
+  STUDIO = 'STUDIO',
+  LIVING_ROOM = 'LIVING_ROOM',
+}
+
 export enum CasitaBulbs {
   BEDROOM = '192.168.1.234',
   KITCHEN = '192.168.1.85',

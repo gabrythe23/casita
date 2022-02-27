@@ -7,12 +7,13 @@ import {
   MerossBulbApiAction,
 } from './interfaces';
 
-export class Light {
+export class Bulb {
   private readonly key = '2fb5b4f961e53fb76b6736c77cae6c05';
   readonly address: string;
   isConnected = false;
   isOn = false;
   firstConnection = false;
+  justDisconnected = false;
 
   constructor(address: CasitaBulbs) {
     this.address = address;
@@ -68,6 +69,7 @@ export class Light {
       this.isConnected = true;
       res = resp.data;
     } catch (err) {
+      this.justDisconnected = this.isConnected;
       this.isConnected = false;
       res = undefined;
     }

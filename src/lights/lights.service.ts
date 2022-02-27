@@ -1,12 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Light } from './light';
+import { Bulb } from './bulb';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { Repository } from 'typeorm';
 import axios from 'axios';
+import { BulbsStateEntity } from './entities/bulbs-state.entity';
+import { LightColors } from './bulb/light-colors';
+import {
+  CasitaBulbs,
+  CasitaBulbsName,
+  MerossApiColor,
+  SunriseSunsetDate,
+} from './bulb/interfaces';
 import { v4 } from 'uuid';
-import { CasitaBulbs, MerossApiColor, SunriseSunsetDate } from './interfaces';
-import { LightColors } from './light-colors';
+
+const bedroom = new Bulb(CasitaBulbs.BEDROOM);
+const bathroom = new Bulb(CasitaBulbs.BATHROOM);
+const kitchen = new Bulb(CasitaBulbs.KITCHEN);
+const studio = new Bulb(CasitaBulbs.STUDIO);
 
 @Injectable()
 export class LightsService {
@@ -14,6 +25,8 @@ export class LightsService {
   constructor(
     @InjectRepository(SunriseSunsetEntity)
     private sunsetEntityRepository: Repository<SunriseSunsetEntity>,
+    @InjectRepository(BulbsStateEntity)
+    private bulbsStateEntityRepository: Repository<BulbsStateEntity>,
   ) {}
 
   async onModuleInit() {
@@ -28,17 +41,18 @@ export class LightsService {
       }),
     );
     await Promise.all([
-      this.checkLight(CasitaBulbs.BEDROOM, color),
-      this.checkLight(CasitaBulbs.BATHROOM, color),
-      this.checkLight(CasitaBulbs.KITCHEN, color),
-      this.checkLight(CasitaBulbs.STUDIO, color),
+      this.checkLight(bedroom, color, CasitaBulbsName.BEDROOM),
+      this.checkLight(bathroom, color, CasitaBulbsName.BATHROOM),
+      this.checkLight(kitchen, color, CasitaBulbsName.KITCHEN),
+      this.checkLight(studio, color, CasitaBulbsName.STUDIO),
     ]);
   }
 
-  async checkLight(ip: CasitaBulbs, color: MerossApiColor): Promise<void> {
-    const light = new Light(ip);
-    const lightName =
-      Object.keys(CasitaBulbs)[Object.values(CasitaBulbs).indexOf(ip)];
+  async checkLight(
+    light: Bulb,
+    color: MerossApiColor,
+    lightName: CasitaBulbsName,
+  ): Promise<void> {
     let message = `${lightName} is `;
     await light.getState();
 
@@ -46,10 +60,26 @@ export class LightsService {
       message += `on `;
       if (light.firstConnection) {
         message += 'for the first time';
+        await this.generateState(lightName, true);
         await light.setLightColor(color);
       }
+    } else if (light.justDisconnected) {
+      message += 'just disconnected';
+      await this.generateState(lightName, false);
     } else message += 'off';
     this.logger.log(message);
+  }
+
+  private async generateState(
+    bulb: CasitaBulbsName,
+    isOn: boolean,
+  ): Promise<void> {
+    const bulbState = new BulbsStateEntity();
+    bulbState.id = v4();
+    bulbState.bulb = bulb;
+    bulbState.isOn = isOn;
+    bulbState.time = new Date().getTime();
+    await this.bulbsStateEntityRepository.save(bulbState);
   }
 
   private getNightShiftColor(
