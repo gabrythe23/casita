@@ -33,24 +33,27 @@ export class LightsService {
       }),
     );
     await Promise.all([
-      this.checkLight(lightBedRoom, color),
-      this.checkLight(lightBathRoom, color),
-      this.checkLight(lightKitchen, color),
-      this.checkLight(lightStudio, color),
+      this.checkLight(CasitaBulbs.BEDROOM, color),
+      this.checkLight(CasitaBulbs.BATHROOM, color),
+      this.checkLight(CasitaBulbs.KITCHEN, color),
+      this.checkLight(CasitaBulbs.STUDIO, color),
     ]);
   }
 
-  async checkLight(light: Light, color: MerossApiColor): Promise<void> {
-    let message = `Light ${light.address} is `;
+  async checkLight(ip: CasitaBulbs, color: MerossApiColor): Promise<void> {
+    const light = new Light(ip);
+    const lightName =
+      Object.keys(CasitaBulbs)[Object.values(CasitaBulbs).indexOf(ip)];
+    let message = `${lightName} is `;
     await light.getState();
 
     if (light.isConnected) {
-      message += `connected `;
+      message += `on `;
       if (light.firstConnection) {
         message += 'for the first time';
         await light.setLightColor(color);
       }
-    } else message += 'disconnected';
+    } else message += 'off';
     this.logger.log(message);
   }
 
