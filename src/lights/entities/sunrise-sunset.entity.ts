@@ -1,24 +1,21 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'sunrise_sunset' })
 export class SunriseSunsetEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({
+    length: 255,
+  })
   id: string;
 
   @Column({ nullable: false })
-  sunrise: number;
+  sunrise: Date;
 
-  @Column({ default: false })
-  sunset: number;
+  @Column({ nullable: false })
+  sunset: Date;
 
   @CreateDateColumn({
-    type: 'date',
-    default: () => "datetime('now','localtime')",
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   registeredDate: Date;
 }

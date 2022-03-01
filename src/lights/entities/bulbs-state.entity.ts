@@ -1,16 +1,12 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
 import { CasitaBulbsName } from '../bulb/interfaces';
 
 @Entity({ name: 'bulb_state' })
 export class BulbsStateEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({
+    length: 255,
+  })
   id: string;
-
   @Column({ nullable: false })
   bulb: CasitaBulbsName;
 
@@ -18,11 +14,11 @@ export class BulbsStateEntity {
   isOn: boolean;
 
   @Column({})
-  time: number;
+  time: Date;
 
   @CreateDateColumn({
-    type: 'date',
-    default: () => "datetime('now','localtime')",
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   registeredDate: Date;
 }

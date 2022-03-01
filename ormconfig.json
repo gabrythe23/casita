@@ -1,5 +1,9 @@
 {
-  "type": "sqlite",
+  "type": "mariadb",
+  "host": "homebridge.local",
+  "port": 3306,
+  "username": "root",
+  "password": "saluzzo",
   "database": "casita",
   "entities": ["src/**/*.entity.ts"],
   "migrations": ["src/migrations/*.ts"],

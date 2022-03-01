@@ -74,12 +74,18 @@ export class LightsService {
     bulb: CasitaBulbsName,
     isOn: boolean,
   ): Promise<void> {
-    const bulbState = new BulbsStateEntity();
-    bulbState.id = v4();
-    bulbState.bulb = bulb;
-    bulbState.isOn = isOn;
-    bulbState.time = new Date().getTime();
-    await this.bulbsStateEntityRepository.save(bulbState);
+    const lastBulbEvent = await this.bulbsStateEntityRepository.findOne({
+      where: { bulb },
+      order: { registeredDate: 'DESC' },
+    });
+    if (!lastBulbEvent || lastBulbEvent.isOn === !isOn) {
+      const bulbState = new BulbsStateEntity();
+      bulbState.id = v4();
+      bulbState.bulb = bulb;
+      bulbState.isOn = isOn;
+      bulbState.time = new Date();
+      await this.bulbsStateEntityRepository.save(bulbState);
+    }
   }
 
   private getNightShiftColor(
@@ -131,8 +137,8 @@ export class LightsService {
     );
     const sunriseSunset = new SunriseSunsetEntity();
     sunriseSunset.id = v4();
-    sunriseSunset.sunset = new Date(request.data.results.sunset).getTime();
-    sunriseSunset.sunrise = new Date(request.data.results.sunrise).getTime();
+    sunriseSunset.sunset = new Date(request.data.results.sunset);
+    sunriseSunset.sunrise = new Date(request.data.results.sunrise);
     await this.sunsetEntityRepository.save(sunriseSunset);
   }
 }
