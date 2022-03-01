@@ -121,7 +121,7 @@ export class LightsService {
       bulbState.isOn = isOn;
       bulbState.time = new Date();
 
-      if (lastBulbEvent.isOn) {
+      if (lastBulbEvent?.isOn) {
         // todo better logs
         const timeSpan: number =
           new Date(bulbState.time).getTime() -
