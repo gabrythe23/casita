@@ -13,7 +13,8 @@ import {
   SunriseSunsetDate,
 } from './bulb/interfaces';
 import { v4 } from 'uuid';
-import io from '@pm2/io';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const io = require('@pm2/io');
 import { MetricMeasurements } from '@pm2/io/build/main/services/metrics';
 import Histogram from '@pm2/io/build/main/utils/metrics/histogram';
 
