@@ -4,7 +4,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { Repository } from 'typeorm';
 import axios from 'axios';
-import { BulbsStateEntity } from './entities/bulbs-state.entity';
 import { LightColors } from './bulb/light-colors';
 import {
   CasitaBulbs,
@@ -13,10 +12,7 @@ import {
   SunriseSunsetDate,
 } from './bulb/interfaces';
 import { v4 } from 'uuid';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const io = require('@pm2/io');
-import { MetricMeasurements } from '@pm2/io/build/main/services/metrics';
-import Histogram from '@pm2/io/build/main/utils/metrics/histogram';
+import { BulbsLightning } from './entities/bulbs-lightning.entity';
 
 const bedroom = new Bulb(CasitaBulbs.BEDROOM);
 const bathroom = new Bulb(CasitaBulbs.BATHROOM);
@@ -26,44 +22,12 @@ const studio = new Bulb(CasitaBulbs.STUDIO);
 @Injectable()
 export class LightsService {
   private readonly logger = new Logger(LightsService.name);
-  private open: { [key in CasitaBulbsName]: Histogram | undefined } = {
-    [CasitaBulbsName.BEDROOM]: io
-      ? io.histogram({
-          name: CasitaBulbsName.BEDROOM,
-          measurement: MetricMeasurements.mean,
-        })
-      : undefined,
-    [CasitaBulbsName.BATHROOM]: io
-      ? io.histogram({
-          name: CasitaBulbsName.BATHROOM,
-          measurement: MetricMeasurements.mean,
-        })
-      : undefined,
-    [CasitaBulbsName.KITCHEN]: io
-      ? io.histogram({
-          name: CasitaBulbsName.KITCHEN,
-          measurement: MetricMeasurements.mean,
-        })
-      : undefined,
-    [CasitaBulbsName.STUDIO]: io
-      ? io.histogram({
-          name: CasitaBulbsName.STUDIO,
-          measurement: MetricMeasurements.mean,
-        })
-      : undefined,
-    [CasitaBulbsName.LIVING_ROOM]: io
-      ? io.histogram({
-          name: CasitaBulbsName.LIVING_ROOM,
-          measurement: MetricMeasurements.mean,
-        })
-      : undefined,
-  };
 
   constructor(
     @InjectRepository(SunriseSunsetEntity)
     private sunsetEntityRepository: Repository<SunriseSunsetEntity>,
-    @InjectRepository(BulbsStateEntity)
-    private bulbsStateEntityRepository: Repository<BulbsStateEntity>,
+    @InjectRepository(BulbsLightning)
+    private bulbsLightningRepository: Repository<BulbsLightning>,
   ) {}
 
   async onModuleInit() {
@@ -111,31 +75,21 @@ export class LightsService {
     bulb: CasitaBulbsName,
     isOn: boolean,
   ): Promise<void> {
-    const lastBulbEvent = await this.bulbsStateEntityRepository.findOne({
-      where: { bulb },
-      order: { registeredDate: 'DESC' },
-    });
-    if (!lastBulbEvent || lastBulbEvent.isOn === !isOn) {
-      const bulbState = new BulbsStateEntity();
-      bulbState.id = v4();
-      bulbState.bulb = bulb;
-      bulbState.isOn = isOn;
-      bulbState.time = new Date();
-
-      if (lastBulbEvent?.isOn) {
-        // todo better logs
-        const timeSpan: number =
-          new Date(bulbState.time).getTime() -
-          new Date(lastBulbEvent.time).getTime();
-        this.logger.log(`Bulb ${bulb} open for ${timeSpan / 1000} seconds`);
-        if (!this.open[bulb] && io)
-          this.open[bulb] = io.histogram({
-            name: bulb,
-            measurement: MetricMeasurements.mean,
-          });
-        if (this.open[bulb]) this.open[bulb].update(timeSpan);
-      }
-      await this.bulbsStateEntityRepository.save(bulbState);
+    const lastBulbEvent: BulbsLightning =
+      await this.bulbsLightningRepository.findOne({
+        where: { bulb },
+        order: { registeredDate: 'DESC' },
+      });
+    if (isOn && (!lastBulbEvent || lastBulbEvent.end)) {
+      const bulbsLightning = new BulbsLightning(bulb);
+      await this.bulbsLightningRepository.save(bulbsLightning);
+    } else if (isOn && lastBulbEvent.end) {
+      // nothing
+    } else if (!isOn && !lastBulbEvent) {
+      // nothing
+    } else if (!isOn && lastBulbEvent.start) {
+      lastBulbEvent.setEnd();
+      await this.bulbsLightningRepository.save(lastBulbEvent);
     }
   }
 
