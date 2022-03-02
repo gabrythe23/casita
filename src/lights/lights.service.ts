@@ -4,15 +4,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { Repository } from 'typeorm';
 import axios from 'axios';
-import { LightColors } from './bulb/light-colors';
 import {
   CasitaBulbs,
   CasitaBulbsName,
-  MerossApiColor,
   SunriseSunsetDate,
 } from './bulb/interfaces';
 import { v4 } from 'uuid';
 import { BulbsLightning } from './entities/bulbs-lightning.entity';
+import { ColorEntity, ColorScope } from './entities/color.entity';
 
 const bedroom = new Bulb(CasitaBulbs.BEDROOM);
 const bathroom = new Bulb(CasitaBulbs.BATHROOM);
@@ -28,6 +27,8 @@ export class LightsService {
     private sunsetEntityRepository: Repository<SunriseSunsetEntity>,
     @InjectRepository(BulbsLightning)
     private bulbsLightningRepository: Repository<BulbsLightning>,
+    @InjectRepository(ColorEntity)
+    private colorEntityRepository: Repository<ColorEntity>,
   ) {}
 
   async onModuleInit() {
@@ -36,7 +37,7 @@ export class LightsService {
   }
 
   async checkAllLights(): Promise<void> {
-    const color = this.getNightShiftColor(
+    const color = await this.getNightShiftColor(
       await this.sunsetEntityRepository.findOneOrFail({
         order: { registeredDate: 'DESC' },
       }),
@@ -51,7 +52,7 @@ export class LightsService {
 
   async checkLight(
     light: Bulb,
-    color: MerossApiColor,
+    color: ColorEntity,
     lightName: CasitaBulbsName,
   ): Promise<void> {
     let message = `${lightName} is `;
@@ -83,46 +84,42 @@ export class LightsService {
     if (isOn && (!lastBulbEvent || lastBulbEvent.end)) {
       const bulbsLightning = new BulbsLightning(bulb);
       await this.bulbsLightningRepository.save(bulbsLightning);
-    } else if (isOn && lastBulbEvent.end) {
-      // nothing
-    } else if (!isOn && !lastBulbEvent) {
-      // nothing
     } else if (!isOn && lastBulbEvent.start) {
       lastBulbEvent.setEnd();
       await this.bulbsLightningRepository.save(lastBulbEvent);
     }
   }
 
-  private getNightShiftColor(
+  private async getNightShiftColor(
     sunriseSunset: SunriseSunsetEntity,
-  ): MerossApiColor {
+  ): Promise<ColorEntity> {
     let message = 'Color is ';
     const sunrise = LightsService.startEnd(sunriseSunset.sunrise);
     const sunset = LightsService.startEnd(sunriseSunset.sunset);
     const dayDate = new Date(sunriseSunset.sunset).getDate();
     const now = new Date().getTime();
 
-    let color: MerossApiColor;
+    let scope: ColorScope;
 
     if (now > sunrise.end && now <= sunset.start) {
-      message += 'WHITE';
-      color = LightColors.WHITE;
+      message += ColorScope.MORNING;
+      scope = ColorScope.MORNING;
     } else if (
       (now > sunset.start && now <= sunset.end) ||
       (now > sunrise.start && now <= sunrise.end)
     ) {
-      message += 'TANGERINE_100';
-      color = LightColors.TANGERINE_100;
+      message += ColorScope.BEFORE_SUNSET_SUNRISE;
+      scope = ColorScope.BEFORE_SUNSET_SUNRISE;
     } else if (now > sunset.end && new Date(now).getDate() === dayDate) {
-      // res.payload = global.get('COLOR_ORANGE');
-      message += 'TANGERINE_50';
-      color = LightColors.TANGERINE_50;
+      message += ColorScope.AFTER_SUNSET;
+      scope = ColorScope.AFTER_SUNSET;
     } else {
-      message += 'RED';
-      color = LightColors.RED;
+      message += ColorScope.NIGHT;
+      scope = ColorScope.NIGHT;
     }
     this.logger.log(message);
-    return color;
+
+    return await this.colorEntityRepository.findOneOrFail({ scope });
   }
 
   private static startEnd(date) {

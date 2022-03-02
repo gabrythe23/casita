@@ -2,10 +2,10 @@ import { createHash } from 'crypto';
 import axios from 'axios';
 import {
   CasitaBulbs,
-  MerossApiColor,
   MerossApiMethod,
   MerossBulbApiAction,
 } from './interfaces';
+import { ColorEntity } from '../entities/color.entity';
 
 export class Bulb {
   private readonly key = '2fb5b4f961e53fb76b6736c77cae6c05';
@@ -76,7 +76,7 @@ export class Bulb {
     return res;
   }
 
-  async setLightColor(payload: MerossApiColor, channel = 0) {
+  async setLightColor(payload: ColorEntity, channel = 0) {
     const resp = await this._sendRequest(
       MerossApiMethod.SET,
       MerossBulbApiAction.SET_COLOR,

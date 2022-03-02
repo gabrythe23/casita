@@ -26,13 +26,6 @@ export enum MerossApiMethod {
   SET = 'SET',
 }
 
-export interface MerossApiColor {
-  temperature: number;
-  rgb: number;
-  luminance: number;
-  capacity: number;
-}
-
 export enum SunriseSunsetDate {
   TOMORROW = 'tomorrow',
   TODAY = 'today',
