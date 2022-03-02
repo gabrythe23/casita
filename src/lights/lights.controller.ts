@@ -9,10 +9,10 @@ export class LightsController {
 
   constructor(private service: LightsService) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_11PM)
   async getSunriseSunset() {
     this.logger.log('Get Sunrise and Sunset for Today');
-    await this.service.saveSunriseSunSet(SunriseSunsetDate.TODAY);
+    await this.service.saveSunriseSunSet(SunriseSunsetDate.TOMORROW);
   }
 
   @Cron(CronExpression.EVERY_SECOND)
