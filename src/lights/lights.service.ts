@@ -33,7 +33,7 @@ export class LightsService {
   async onModuleInit() {
     this.logger.log('Initialization of LightService');
     await this.setWatched();
-    // await this.saveSunriseSunSet(SunriseSunsetDate.TODAY);
+    await this.saveSunriseSunSet(SunriseSunsetDate.TODAY);
   }
 
   private async setWatched() {
