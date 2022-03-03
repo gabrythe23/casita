@@ -5,22 +5,19 @@ import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import {
-  CasitaBulbs,
   CasitaBulbsName,
+  CasitaWatchWith,
   SunriseSunsetDate,
 } from './bulb/interfaces';
 import { v4 } from 'uuid';
 import { BulbsLightning } from './entities/bulbs-lightning.entity';
 import { ColorEntity, ColorScope } from './entities/color.entity';
-
-const bedroom = new Bulb(CasitaBulbs.BEDROOM);
-const bathroom = new Bulb(CasitaBulbs.BATHROOM);
-const kitchen = new Bulb(CasitaBulbs.KITCHEN);
-const studio = new Bulb(CasitaBulbs.STUDIO);
+import { BulbEntity } from './entities/bulb.entity';
 
 @Injectable()
 export class LightsService {
   private readonly logger = new Logger(LightsService.name);
+  private watched: Partial<Record<CasitaBulbsName, Bulb>> = {};
 
   constructor(
     @InjectRepository(SunriseSunsetEntity)
@@ -29,11 +26,23 @@ export class LightsService {
     private bulbsLightningRepository: Repository<BulbsLightning>,
     @InjectRepository(ColorEntity)
     private colorEntityRepository: Repository<ColorEntity>,
+    @InjectRepository(BulbEntity)
+    private bulbsEntityRepository: Repository<BulbEntity>,
   ) {}
 
   async onModuleInit() {
     this.logger.log('Initialization of LightService');
-    await this.saveSunriseSunSet(SunriseSunsetDate.TODAY);
+    await this.setWatched();
+    // await this.saveSunriseSunSet(SunriseSunsetDate.TODAY);
+  }
+
+  private async setWatched() {
+    const watched: BulbEntity[] = await this.bulbsEntityRepository.find({
+      where: { watchWith: CasitaWatchWith.LOCAL },
+    });
+    for (const watch of watched) {
+      this.watched[watch.commonName] = new Bulb(watch.ip);
+    }
   }
 
   async checkAllLights(): Promise<void> {
@@ -42,12 +51,11 @@ export class LightsService {
         order: { registeredDate: 'DESC' },
       }),
     );
-    await Promise.all([
-      this.checkLight(bedroom, color, CasitaBulbsName.BEDROOM),
-      this.checkLight(bathroom, color, CasitaBulbsName.BATHROOM),
-      this.checkLight(kitchen, color, CasitaBulbsName.KITCHEN),
-      this.checkLight(studio, color, CasitaBulbsName.STUDIO),
-    ]);
+    const checkLights = [];
+    for (const [key, value] of Object.entries(this.watched)) {
+      checkLights.push(this.checkLight(value, color, key as CasitaBulbsName));
+    }
+    await Promise.all(checkLights);
   }
 
   async checkLight(
@@ -72,10 +80,7 @@ export class LightsService {
     this.logger.log(message);
   }
 
-  private async generateState(
-    bulb: CasitaBulbsName,
-    isOn: boolean,
-  ): Promise<void> {
+  async generateState(bulb: CasitaBulbsName, isOn: boolean): Promise<void> {
     const lastBulbEvent: BulbsLightning =
       await this.bulbsLightningRepository.findOne({
         where: { bulb },

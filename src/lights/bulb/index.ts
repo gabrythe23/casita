@@ -1,10 +1,6 @@
 import { createHash } from 'crypto';
 import axios from 'axios';
-import {
-  CasitaBulbs,
-  MerossApiMethod,
-  MerossBulbApiAction,
-} from './interfaces';
+import { MerossApiMethod, MerossBulbApiAction } from './interfaces';
 import { ColorEntity } from '../entities/color.entity';
 
 export class Bulb {
@@ -15,7 +11,7 @@ export class Bulb {
   firstConnection = false;
   justDisconnected = false;
 
-  constructor(address: CasitaBulbs) {
+  constructor(address: string) {
     this.address = address;
   }
 

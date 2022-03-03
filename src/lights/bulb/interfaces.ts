@@ -6,12 +6,9 @@ export enum CasitaBulbsName {
   LIVING_ROOM = 'LIVING_ROOM',
 }
 
-export enum CasitaBulbs {
-  BEDROOM = '192.168.1.234',
-  KITCHEN = '192.168.1.85',
-  BATHROOM = '192.168.1.191',
-  STUDIO = '192.168.1.5',
-  LIVING_ROOM = '192.168.1.249',
+export enum CasitaWatchWith {
+  CLOUD = 'CLOUD',
+  LOCAL = 'LOCAL',
 }
 
 export enum MerossBulbApiAction {
