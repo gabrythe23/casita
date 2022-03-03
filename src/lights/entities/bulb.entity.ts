@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
-import { CasitaBulbsName, CasitaWatchWith } from '../bulb/interfaces';
+import { CasitaBulbsName, CasitaWatchWith } from '../local/bulb/interfaces';
 
 @Entity({ name: 'bulbs' })
 export class BulbEntity {

@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn } from 'typeorm';
-import { CasitaBulbsName } from '../bulb/interfaces';
+import { CasitaBulbsName } from '../local/bulb/interfaces';
 import { v4 } from 'uuid';
 
 @Entity({ name: 'bulb_lightning' })

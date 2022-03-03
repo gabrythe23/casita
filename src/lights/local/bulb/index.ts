@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import axios from 'axios';
 import { MerossApiMethod, MerossBulbApiAction } from './interfaces';
-import { ColorEntity } from '../entities/color.entity';
+import { ColorEntity } from '../../entities/color.entity';
 
 export class Bulb {
   private readonly key = '2fb5b4f961e53fb76b6736c77cae6c05';

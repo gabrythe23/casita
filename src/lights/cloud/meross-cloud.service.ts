@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BulbEntity } from './entities/bulb.entity';
+import { BulbEntity } from '../entities/bulb.entity';
 import { DeviceDefinition } from 'meross-cloud';
 import { v4 } from 'uuid';
-import { CasitaWatchWith, MerossBulbApiAction } from './bulb/interfaces';
-import { LightsService } from './lights.service';
+import { CasitaWatchWith, MerossBulbApiAction } from '../local/bulb/interfaces';
+import { LightsService } from '../local/lights.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 @Injectable()
 export class MerossCloudService {
   private readonly logger = new Logger(MerossCloudService.name);
@@ -15,42 +17,16 @@ export class MerossCloudService {
     @InjectRepository(BulbEntity)
     private bulbsEntityRepository: Repository<BulbEntity>,
     private lightService: LightsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async onModuleInit() {
     this.watched = await this.bulbsEntityRepository.find({
       where: { watchWith: CasitaWatchWith.CLOUD },
     });
-    this.buildMerossClient();
   }
 
-  private buildMerossClient() {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const API = require('meross-cloud');
-    const meross = new API({
-      email: 'gabrielepartiti@icloud.com',
-      password: 'saluzzo2021',
-      logger: this.logger.log,
-      localHttpFirst: true,
-    });
-    meross.connect();
-    meross.on(
-      'deviceInitialized',
-      async (deviceId: string, deviceDef: DeviceDefinition) =>
-        await this.registerMerossCloudDevice(deviceId, deviceDef),
-    );
-    meross.on(
-      'data',
-      async (
-        deviceId: string,
-        method: MerossBulbApiAction,
-        data: Record<string, any>,
-      ) => await this.registerEvent(deviceId, method, data),
-    );
-    return meross;
-  }
-
-  private async registerEvent(
+  async registerEvent(
     deviceId: string,
     action: MerossBulbApiAction,
     data: Record<string, any>,
@@ -67,7 +43,7 @@ export class MerossCloudService {
     }
   }
 
-  private async registerMerossCloudDevice(
+  async registerMerossCloudDevice(
     deviceId: string,
     deviceDef: DeviceDefinition,
   ): Promise<void> {

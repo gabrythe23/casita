@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Bulb } from './bulb';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
+import { SunriseSunsetEntity } from '../entities/sunrise-sunset.entity';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import {
@@ -10,9 +10,9 @@ import {
   SunriseSunsetDate,
 } from './bulb/interfaces';
 import { v4 } from 'uuid';
-import { BulbsLightning } from './entities/bulbs-lightning.entity';
-import { ColorEntity, ColorScope } from './entities/color.entity';
-import { BulbEntity } from './entities/bulb.entity';
+import { BulbsLightning } from '../entities/bulbs-lightning.entity';
+import { ColorEntity, ColorScope } from '../entities/color.entity';
+import { BulbEntity } from '../entities/bulb.entity';
 
 @Injectable()
 export class LightsService {
