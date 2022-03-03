@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { LightsController } from './local/lights.controller';
-import { LightsService } from './local/lights.service';
+import { MerossLocalController } from './local/meross-local.controller';
+import { MerossLocalService } from './local/meross-local.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { BulbsLightning } from './entities/bulbs-lightning.entity';
@@ -10,6 +10,8 @@ import { BulbEntity } from './entities/bulb.entity';
 import { MerossCloudController } from './cloud/meross-cloud.controller';
 import { MerossCloudConnectorService } from './cloud/meross-cloud-connector.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { LightsService } from './lights.service';
+import { LightsNightShiftService } from './lights-night-shift.service';
 
 @Module({
   imports: [
@@ -21,7 +23,13 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       BulbEntity,
     ]),
   ],
-  controllers: [LightsController, MerossCloudController],
-  providers: [LightsService, MerossCloudService, MerossCloudConnectorService],
+  controllers: [MerossLocalController, MerossCloudController],
+  providers: [
+    MerossLocalService,
+    MerossCloudService,
+    MerossCloudConnectorService,
+    LightsService,
+    LightsNightShiftService,
+  ],
 })
 export class LightsModule {}

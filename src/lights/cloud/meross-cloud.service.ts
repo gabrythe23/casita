@@ -5,8 +5,8 @@ import { BulbEntity } from '../entities/bulb.entity';
 import { DeviceDefinition } from 'meross-cloud';
 import { v4 } from 'uuid';
 import { CasitaWatchWith, MerossBulbApiAction } from '../local/bulb/interfaces';
-import { LightsService } from '../local/lights.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { LightsService } from '../lights.service';
 
 @Injectable()
 export class MerossCloudService {
