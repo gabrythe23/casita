@@ -4,12 +4,12 @@ import { BulbsLightning } from './entities/bulbs-lightning.entity';
 import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { ColorEntity, ColorScope } from './entities/color.entity';
 import { Repository } from 'typeorm';
-import { CasitaBulbsName, SunriseSunsetDate } from './local/bulb/interfaces';
+import { CasitaBulbsName } from './local/bulb/interfaces';
 import { Bulb } from './local/bulb';
 import { BulbEntity } from './entities/bulb.entity';
-import axios from 'axios';
 import { LightsService } from './lights.service';
 import { v4 } from 'uuid';
+import { getSunrise, getSunset } from 'sunrise-sunset-js';
 
 @Injectable()
 export class LightsNightShiftService {
@@ -30,7 +30,7 @@ export class LightsNightShiftService {
 
   async onModuleInit() {
     this.logger.log('Initialization of LightsNightShiftService');
-    //await this.saveSunriseSunSet(SunriseSunsetDate.TODAY);
+    await this.saveSunriseSunSet();
   }
 
   async getNightShiftColor(
@@ -74,16 +74,11 @@ export class LightsNightShiftService {
     };
   }
 
-  async saveSunriseSunSet(
-    date: SunriseSunsetDate = SunriseSunsetDate.TOMORROW,
-  ): Promise<void> {
-    const request = await axios.get(
-      `https://api.sunrise-sunset.org/json?lat=44.644540&lng=7.492735&date=${date}&formatted=0`,
-    );
+  async saveSunriseSunSet(): Promise<void> {
     const sunriseSunset = new SunriseSunsetEntity();
     sunriseSunset.id = v4();
-    sunriseSunset.sunset = new Date(request.data.results.sunset);
-    sunriseSunset.sunrise = new Date(request.data.results.sunrise);
+    sunriseSunset.sunset = getSunset(44.64671, 7.49309);
+    sunriseSunset.sunrise = getSunrise(44.64671, 7.49309);
     await this.sunsetEntityRepository.save(sunriseSunset);
   }
 }

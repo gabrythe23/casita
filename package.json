@@ -39,6 +39,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "sqlite3": "^5.0.2",
+    "sunrise-sunset-js": "^2.2.1",
     "typeorm": "^0.2.44",
     "uuid": "^8.3.2"
   },
