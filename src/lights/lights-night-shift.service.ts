@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BulbsLightning } from './entities/bulbs-lightning.entity';
-import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { ColorEntity, ColorScope } from './entities/color.entity';
 import { Repository } from 'typeorm';
 import { CasitaBulbsName } from './local/bulb/interfaces';
@@ -10,6 +9,7 @@ import { BulbEntity } from './entities/bulb.entity';
 import { LightsService } from './lights.service';
 import { v4 } from 'uuid';
 import { getSunrise, getSunset } from 'sunrise-sunset-js';
+import { SunriseSunset } from './local/lights-night-sight.interface';
 
 @Injectable()
 export class LightsNightShiftService {
@@ -17,8 +17,6 @@ export class LightsNightShiftService {
   private watched: Partial<Record<CasitaBulbsName, Bulb>> = {};
 
   constructor(
-    @InjectRepository(SunriseSunsetEntity)
-    private sunsetEntityRepository: Repository<SunriseSunsetEntity>,
     @InjectRepository(BulbsLightning)
     private bulbsLightningRepository: Repository<BulbsLightning>,
     @InjectRepository(ColorEntity)
@@ -30,12 +28,9 @@ export class LightsNightShiftService {
 
   async onModuleInit() {
     this.logger.log('Initialization of LightsNightShiftService');
-    await this.saveSunriseSunSet();
   }
 
-  async getNightShiftColor(
-    sunriseSunset: SunriseSunsetEntity,
-  ): Promise<ColorEntity> {
+  async getNightShiftColor(sunriseSunset: SunriseSunset): Promise<ColorEntity> {
     let message = 'Color is ';
     const sunrise = LightsNightShiftService.startEnd(sunriseSunset.sunrise);
     const sunset = LightsNightShiftService.startEnd(sunriseSunset.sunset);
@@ -65,20 +60,12 @@ export class LightsNightShiftService {
     return await this.colorEntityRepository.findOneOrFail({ scope });
   }
 
-  private static startEnd(date) {
+  private static startEnd(date: Date): { start: number; end: number } {
     const oneHour = 3600 * 1000;
     date = new Date(date);
     return {
       start: new Date(date.getTime() - oneHour * 1.5).getTime(),
-      end: date,
+      end: date.getTime(),
     };
-  }
-
-  async saveSunriseSunSet(): Promise<void> {
-    const sunriseSunset = new SunriseSunsetEntity();
-    sunriseSunset.id = v4();
-    sunriseSunset.sunset = getSunset(44.64671, 7.49309);
-    sunriseSunset.sunrise = getSunrise(44.64671, 7.49309);
-    await this.sunsetEntityRepository.save(sunriseSunset);
   }
 }

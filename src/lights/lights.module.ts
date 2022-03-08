@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MerossLocalController } from './local/meross-local.controller';
 import { MerossLocalService } from './local/meross-local.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SunriseSunsetEntity } from './entities/sunrise-sunset.entity';
 import { BulbsLightning } from './entities/bulbs-lightning.entity';
 import { ColorEntity } from './entities/color.entity';
 import { MerossCloudService } from './cloud/meross-cloud.service';
@@ -16,12 +15,7 @@ import { LightsNightShiftService } from './lights-night-shift.service';
 @Module({
   imports: [
     EventEmitterModule.forRoot(),
-    TypeOrmModule.forFeature([
-      SunriseSunsetEntity,
-      BulbsLightning,
-      ColorEntity,
-      BulbEntity,
-    ]),
+    TypeOrmModule.forFeature([BulbsLightning, ColorEntity, BulbEntity]),
   ],
   controllers: [MerossLocalController, MerossCloudController],
   providers: [

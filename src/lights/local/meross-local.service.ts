@@ -1,20 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Bulb } from './bulb';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SunriseSunsetEntity } from '../entities/sunrise-sunset.entity';
 import { Repository } from 'typeorm';
-import axios from 'axios';
-import {
-  CasitaBulbsName,
-  CasitaWatchWith,
-  SunriseSunsetDate,
-} from './bulb/interfaces';
-import { v4 } from 'uuid';
+import { CasitaBulbsName, CasitaWatchWith } from './bulb/interfaces';
 import { BulbsLightning } from '../entities/bulbs-lightning.entity';
-import { ColorEntity, ColorScope } from '../entities/color.entity';
+import { ColorEntity } from '../entities/color.entity';
 import { BulbEntity } from '../entities/bulb.entity';
 import { LightsService } from '../lights.service';
 import { LightsNightShiftService } from '../lights-night-shift.service';
+import { getSunrise, getSunset } from 'sunrise-sunset-js';
 
 @Injectable()
 export class MerossLocalService {
@@ -22,8 +16,6 @@ export class MerossLocalService {
   private watched: Partial<Record<CasitaBulbsName, Bulb>> = {};
 
   constructor(
-    @InjectRepository(SunriseSunsetEntity)
-    private sunsetEntityRepository: Repository<SunriseSunsetEntity>,
     @InjectRepository(BulbsLightning)
     private bulbsLightningRepository: Repository<BulbsLightning>,
     @InjectRepository(ColorEntity)
@@ -49,11 +41,10 @@ export class MerossLocalService {
   }
 
   async checkAllLights(): Promise<void> {
-    const color = await this.lightsNightShiftService.getNightShiftColor(
-      await this.sunsetEntityRepository.findOneOrFail({
-        order: { registeredDate: 'DESC' },
-      }),
-    );
+    const color = await this.lightsNightShiftService.getNightShiftColor({
+      sunrise: new Date(getSunrise(44.64671, 7.49309)),
+      sunset: new Date(getSunset(44.64671, 7.49309)),
+    });
     const checkLights = [];
     for (const [key, value] of Object.entries(this.watched)) {
       checkLights.push(this.checkLight(value, color, key as CasitaBulbsName));
