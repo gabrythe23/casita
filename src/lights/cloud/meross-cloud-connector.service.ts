@@ -14,7 +14,7 @@ export class MerossCloudConnectorService {
   constructor(private eventEmitter: EventEmitter2) {
     this.meross = new API({
       email: 'gabrielepartiti@icloud.com',
-      password: 'saluzzo2021',
+      password: process.env.MEROSS_PASSWORD,
       logger: this.logger.log,
       localHttpFirst: true,
     });
